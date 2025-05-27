@@ -1,130 +1,74 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Генератор Telegram WebApp ссылок</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>UTM-генератор для MolodostraWebApp</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f4f4;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        .container h1 {
-            margin-top: 0;
-            font-size: 1.5em;
-        }
-        .field {
-            margin-bottom: 12px;
-        }
-        .field label {
-            display: block;
-            margin-bottom: 4px;
-            font-weight: bold;
-        }
-        .field input {
-            width: 100%;
-            padding: 8px;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            display: inline-block;
-            padding: 10px 20px;
-            background: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1em;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        textarea {
-            width: 100%;
-            height: 60px;
-            padding: 8px;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            resize: none;
-        }
+        body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; }
+        label { display: block; margin-top: 1rem; }
+        input, select { width: 100%; padding: .5rem; font-size: 1rem; }
+        button { margin-top: 1.5rem; padding: .75rem 1.5rem; font-size: 1rem; }
+        .output { margin-top: 1rem; word-break: break-all; background: #f5f5f5; padding: .75rem; }
     </style>
 </head>
 <body>
-<div class="container">
-    <h1>Генератор Telegram WebApp ссылок</h1>
-    <div class="field">
-        <label for="botUsername">Bot Username</label>
-        <input id="botUsername" type="text" value="molodostravebot" />
-    </div>
-    <div class="field">
-        <label for="eventId">Event ID</label>
-        <input id="eventId" type="text" placeholder="Например: 168624" />
-    </div>
-    <div class="field">
-        <label for="qcode">Promo Code (qcode)</label>
-        <input id="qcode" type="text" placeholder="Например: TEST2025" />
-    </div>
-    <div class="field">
-        <label for="utm_source">UTM Source</label>
-        <input id="utm_source" type="text" placeholder="Например: telegram" />
-    </div>
-    <div class="field">
-        <label for="utm_medium">UTM Medium</label>
-        <input id="utm_medium" type="text" placeholder="Например: social" />
-    </div>
-    <div class="field">
-        <label for="utm_campaign">UTM Campaign</label>
-        <input id="utm_campaign" type="text" placeholder="Например: promo" />
-    </div>
-    <div class="field">
-        <label for="utm_term">UTM Term</label>
-        <input id="utm_term" type="text" placeholder="Например: summer_sale" />
-    </div>
-    <div class="field">
-        <label for="utm_content">UTM Content</label>
-        <input id="utm_content" type="text" placeholder="Например: announce" />
-    </div>
-    <button id="generate">Сгенерировать ссылку</button>
-    <div class="field" style="margin-top:20px;">
-        <label for="result">Ссылка на Telegram:</label>
-        <textarea id="result" readonly placeholder="Здесь появится ссылка"></textarea>
-    </div>
-</div>
+<h1>Генератор UTM-ссылки</h1>
+<form id="utmForm">
+    <label>
+        Имя бота (без @)
+        <input type="text" id="bot" value="molodostravebot" required>
+    </label>
+    <label>
+        ID события (event_id)
+        <input type="text" id="event_id" placeholder="168624" required>
+    </label>
+    <label>
+        Промо-код (qcode)
+        <input type="text" id="qcode" placeholder="test">
+    </label>
+    <fieldset style="margin-top:1rem;">
+        <legend>UTM-метки (по необходимости)</legend>
+        <label>utm_source
+            <input type="text" id="utm_source" placeholder="telegram">
+        </label>
+        <label>utm_medium
+            <input type="text" id="utm_medium" placeholder="social">
+        </label>
+        <label>utm_campaign
+            <input type="text" id="utm_campaign" placeholder="promo">
+        </label>
+        <label>utm_term
+            <input type="text" id="utm_term" placeholder="keyword">
+        </label>
+        <label>utm_content
+            <input type="text" id="utm_content" placeholder="announce">
+        </label>
+    </fieldset>
+    <button type="submit">Сгенерировать ссылку</button>
+</form>
+
+<div class="output" id="result"></div>
 
 <script>
-    document.getElementById('generate').addEventListener('click', () => {
-        const bot = document.getElementById('botUsername').value.trim();
-        const eventId = document.getElementById('eventId').value.trim();
-        if (!bot || !eventId) {
-            alert('Введите Bot Username и Event ID');
-            return;
-        }
-
-        const parts = [eventId];
-        ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'].forEach(key => {
-            const val = document.getElementById(key).value.trim();
-            if (val) parts.push(`${key}=${val}`);
-        });
-
-        const qcode = document.getElementById('qcode').value.trim();
-        if (qcode) parts.push(`qcode=${qcode}`);
-
+    document.getElementById('utmForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const bot     = document.getElementById('bot').value.trim();
+        const eventId = document.getElementById('event_id').value.trim();
+        const qcode   = document.getElementById('qcode').value.trim();
+        const utm = ['source','medium','campaign','term','content']
+            .map(k => {
+                const v = document.getElementById('utm_' + k).value.trim();
+                return v ? `utm_${k}=${encodeURIComponent(v)}` : null;
+            })
+            .filter(Boolean);
+        // собираем payload
+        const parts = [eventId, ...utm];
+        if (qcode) parts.push(`qcode=${encodeURIComponent(qcode)}`);
         const payload = parts.join('-');
-        const url = `https://t.me/${bot}/tickets?startapp=${payload}`;
-        document.getElementById('result').value = url;
+        // итоговая ссылка
+        const link = `https://t.me/${bot}/tickets?startapp=${payload}`;
+        document.getElementById('result').textContent = link;
     });
 </script>
 </body>
