@@ -28,6 +28,8 @@
         || new URLSearchParams(location.search).get('startapp')
         || '';
 
+    alert(startParam);
+
     if (!startParam) {
         document.body.innerHTML =
             '<p style="color:red; text-align:center; margin-top:2rem;">Ошибка: не передан startapp</p>';
