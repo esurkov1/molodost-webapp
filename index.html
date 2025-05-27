@@ -16,41 +16,42 @@
         window.addEventListener('DOMContentLoaded', () => {
             if (tg) tg.ready();
 
-            // 1) Получаем закодированный payload
-            const encoded = new URLSearchParams(location.search)
+            // 1) Получаем payload из ?startapp или initDataUnsafe
+            const payload = new URLSearchParams(location.search)
                     .get('startapp')
                 || tg?.initDataUnsafe?.start_param
                 || '';
-            if (!encoded) {
-                document.body.innerHTML = '<p style="color:red; text-align:center;">Ошибка: нет startapp</p>';
+            if (!payload) {
+                document.body.innerHTML = '<p style="color:red; text-align:center;">Нет startapp</p>';
                 return;
             }
 
-            // 2) Декодируем
-            let raw;
-            try {
-                raw = decodeURIComponent(encoded);
-            } catch {
-                document.body.innerHTML = '<p style="color:red; text-align:center;">Неверная кодировка</p>';
-                return;
-            }
-
-            // 3) Парсим в URLSearchParams
-            const params = new URLSearchParams(raw);
-            const eventId = params.get('event_id');
+            // 2) Разбиваем по '-' на куски
+            const segments = payload.split('-');
+            // 3) Первый сегмент — это eventId
+            const eventId = segments.shift();
             if (!eventId) {
-                document.body.innerHTML = '<p style="color:red; text-align:center;">Ошибка: нет event_id</p>';
+                document.body.innerHTML = '<p style="color:red; text-align:center;">Нет event_id</p>';
                 return;
             }
 
-            // 4) Собираем остальные параметры (qcode и UTM)
-            params.delete('event_id');
-            const qs = params.toString(); // qcode=…&utm_source=…&…
+            // 4) Остальные сегменты — в формате key=value
+            const params = new URLSearchParams();
+            segments.forEach(seg => {
+                const [key, value] = seg.split('=');
+                if (key && value != null) {
+                    params.set(key, value);
+                }
+            });
 
-            // 5) Вставляем iframe
+            // 5) Строим URL для iframe
+            const qs = params.toString();
+            const src = `https://qtickets.ru/event/${encodeURIComponent(eventId)}/${ qs ? `?${qs}` : '' }`;
+
+            // 6) Вставляем iframe
             const iframe = document.createElement('iframe');
             iframe.id = 'frame';
-            iframe.src = `https://qtickets.ru/event/${encodeURIComponent(eventId)}/${ qs ? `?${qs}` : '' }`;
+            iframe.src = src;
             iframe.frameBorder = '0';
             document.body.appendChild(iframe);
         });
