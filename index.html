@@ -33,10 +33,10 @@
 
     const params = new URLSearchParams();
 
-    // Добавляем исходный startParam целиком (Telegram это ожидает)
-    params.set('tgWebAppStartParam', startParamRaw);
+    // Добавляем чистый eventId как tgWebAppStartParam
+    params.set('tgWebAppStartParam', eventId);
 
-    // Разбор utm-пар (только валидные: key && value)
+    // Добавляем только валидные utm-пары
     segments.forEach(seg => {
         const [key, ...rest] = seg.split('=');
         const val = rest.join('=');
@@ -45,10 +45,10 @@
         }
     });
 
-    alert(params.toString());
-
-    // Финальный URL для iframe
+    // Финальный URL
     const finalUrl = `https://qtickets.ru/telegram-iframe?${params.toString()}${hash}`;
+
+    console.log("Final query params:", params.toString());  // для отладки
 
     const iframe = document.createElement('iframe');
     iframe.id = 'frame';
