@@ -1,46 +1,21 @@
-<!doctype html>
-<html lang="ru">
-<head>
+<!doctype html><html><head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Redirect…</title>
-
-    <!-- запрет кеша -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma"        content="no-cache">
     <meta http-equiv="Expires"       content="0">
-
-    <style>
-        body{margin:0;display:flex;justify-content:center;align-items:center;
-            height:100vh;font-family:sans-serif}
-    </style>
-
     <script>
-        (function () {
+        (function(){
+            const qs   = new URLSearchParams(location.search);
+            const id   = qs.get('startapp') || qs.get('tgWebAppStartParam');
+            if(!id){document.body.textContent='startapp отсутствует';return;}
 
-            /* читаем startapp (или tgWebAppStartParam, если открылось прямой ссылкой) */
-            const s   = new URLSearchParams(location.search);
-            const id  = s.get('startapp') || s.get('tgWebAppStartParam');
+            /* передаём **только** tgWebAppStartParam; никаких event_id, никаких _cb */
+            const dest = 'https://qtickets.ru/telegram-iframe'
+                + '?tgWebAppStartParam='+encodeURIComponent(id)
+                + (location.hash || '');
 
-            if (!id) { document.body.textContent = 'startapp отсутствует'; return; }
-
-            /* формируем query, который ждёт Qtickets */
-            const q   = new URLSearchParams({
-                tgWebAppStartParam: id,
-                event_id:           id,
-                _cb:                Date.now()        /* cache-buster */
-            });
-
-            /* неизменный хэш – там tgWebAppData и подпись */
-            const dest = `https://qtickets.ru/telegram-iframe?${q}${location.hash||''}`;
-
-            /* обычный редирект, чтобы WebApp остался в том же контексте */
             location.replace(dest);
-
         })();
-    </script>
-</head>
-<body>
-<p>Открываю QTickets…</p>
-</body>
-</html>
+    </script></head><body></body></html>
