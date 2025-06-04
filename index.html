@@ -7,7 +7,8 @@
     <script>
         (function (){
 
-            console.log("v1")
+            console.log("v1");
+
 
             const q   = new URLSearchParams(location.search);
             const id  = q.get('startapp') || q.get('tgWebAppStartParam');
@@ -18,8 +19,12 @@
             out.set('tgWebAppStartParam', id);
             out.set('start_param',        id);   // ← новое
 
-            location.replace(
-                'https://qtickets.ru/telegram-iframe?'+out.toString()+ (location.hash||'')
-            );
+
+            setTimeout(function(){
+                location.replace(
+                    'https://qtickets.ru/telegram-iframe?'+out.toString()+ (location.hash||'')
+                );
+            }, 5000)
+
         })();
     </script></head><body></body></html>
