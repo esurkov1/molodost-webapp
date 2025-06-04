@@ -6,6 +6,9 @@
     <meta http-equiv="Expires"       content="0">
     <script>
         (function (){
+
+            console.log("v1")
+
             const q   = new URLSearchParams(location.search);
             const id  = q.get('startapp') || q.get('tgWebAppStartParam');
             if(!id){document.body.textContent='startapp отсутствует';return;}
