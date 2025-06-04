@@ -1,32 +1,46 @@
-<!doctype html><html lang="ru"><head>
-    <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Redirect…</title>
+
+    <!-- запрет кеша -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma"        content="no-cache">
     <meta http-equiv="Expires"       content="0">
+
+    <style>
+        body{margin:0;display:flex;justify-content:center;align-items:center;
+            height:100vh;font-family:sans-serif}
+    </style>
+
     <script>
-        (function (){
-            const p     = new URLSearchParams(location.search);
-            const raw   = p.get('startapp') || p.get('tgWebAppStartParam');
-            if(!raw){document.body.textContent='startapp missing';return;}
+        (function () {
 
-            const [eventId, b64=''] = raw.split('_',2);
+            /* читаем startapp (или tgWebAppStartParam, если открылось прямой ссылкой) */
+            const s   = new URLSearchParams(location.search);
+            const id  = s.get('startapp') || s.get('tgWebAppStartParam');
 
-            /* ↓ base64url → JSON → объект */
-            let utm = {};
-            if(b64){
-                const pad = b64.length%4? '='.repeat(4-b64.length%4):'';
-                const json = atob(b64.replace(/-/g,'+').replace(/_/g,'/')+pad);
-                try{ utm = JSON.parse(json); }catch(e){}
-            }
+            if (!id) { document.body.textContent = 'startapp отсутствует'; return; }
 
-            const q = new URLSearchParams({ tgWebAppStartParam:eventId, event_id:eventId, _cb:Date.now() });
-            if(utm.s) q.set('utm_source',   utm.s);
-            if(utm.m) q.set('utm_medium',   utm.m);
-            if(utm.c) q.set('utm_campaign', utm.c);
-            if(utm.t) q.set('utm_term',     utm.t);
-            if(utm.o) q.set('utm_content',  utm.o);
+            /* формируем query, который ждёт Qtickets */
+            const q   = new URLSearchParams({
+                tgWebAppStartParam: id,
+                event_id:           id,
+                _cb:                Date.now()        /* cache-buster */
+            });
 
-            location.replace(`https://qtickets.ru/telegram-iframe?${q}${location.hash||''}`);
+            /* неизменный хэш – там tgWebAppData и подпись */
+            const dest = `https://qtickets.ru/telegram-iframe?${q}${location.hash||''}`;
+
+            /* обычный редирект, чтобы WebApp остался в том же контексте */
+            location.replace(dest);
+
         })();
-    </script></head><body></body></html>
+    </script>
+</head>
+<body>
+<p>Открываю QTickets…</p>
+</body>
+</html>
