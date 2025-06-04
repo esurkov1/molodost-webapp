@@ -1,21 +1,22 @@
-<!doctype html><html><head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+<!doctype html><html lang="ru"><head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Redirect…</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma"        content="no-cache">
     <meta http-equiv="Expires"       content="0">
     <script>
-        (function(){
-            const qs   = new URLSearchParams(location.search);
-            const id   = qs.get('startapp') || qs.get('tgWebAppStartParam');
+        (function (){
+            const q   = new URLSearchParams(location.search);
+            const id  = q.get('startapp') || q.get('tgWebAppStartParam');
             if(!id){document.body.textContent='startapp отсутствует';return;}
 
-            /* передаём **только** tgWebAppStartParam; никаких event_id, никаких _cb */
-            const dest = 'https://qtickets.ru/telegram-iframe'
-                + '?tgWebAppStartParam='+encodeURIComponent(id)
-                + (location.hash || '');
+            /* добавляем и tgWebAppStartParam, и start_param — ОДИНАКОВЫЕ */
+            const out = new URLSearchParams();
+            out.set('tgWebAppStartParam', id);
+            out.set('start_param',        id);   // ← новое
 
-            location.replace(dest);
+            location.replace(
+                'https://qtickets.ru/telegram-iframe?'+out.toString()+ (location.hash||'')
+            );
         })();
     </script></head><body></body></html>
