@@ -41,6 +41,10 @@
             /* 4. Кэш-бастер на всякий случай */
             query.set('_cb', Date.now());
 
+            console.log('final url →', `https://qtickets.ru/telegram-iframe?${query}${hash}`);
+            console.log('initData.start_param in this WebView →',
+            window.Telegram?.WebApp?.initDataUnsafe?.start_param);
+
             /* 5. Переходим обычным редиректом (WebApp остаётся открытым) */
             location.replace(`https://qtickets.ru/telegram-iframe?${query}${hash}`);
         })();
