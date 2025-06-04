@@ -3,58 +3,40 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <title>QTickets WebApp Proxy</title>
-    <style>
-        html, body, #frame {
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
-            overflow: hidden;
-            background: white;
+    <title>Redirecting…</title>
+    <script>
+        const queryParams = new URLSearchParams(window.location.search);
+        const hash = window.location.hash || '';
+
+        const startParamRaw = queryParams.get('tgWebAppStartParam');
+        if (!startParamRaw) {
+            document.body.innerText = 'Ошибка: нет tgWebAppStartParam';
+            throw new Error('Missing tgWebAppStartParam');
         }
-    </style>
+
+        const segments = startParamRaw.split('-');
+        const eventId = segments.shift();
+        if (!eventId) {
+            document.body.innerText = 'Ошибка: нет eventId';
+            throw new Error('Missing eventId');
+        }
+
+        const params = new URLSearchParams();
+        params.set('tgWebAppStartParam', eventId);
+
+        segments.forEach(seg => {
+            const [key, ...rest] = seg.split('=');
+            const val = rest.join('=');
+            if (key && val) {
+                params.set(key, val);
+            }
+        });
+
+        const finalUrl = `https://qtickets.ru/telegram-iframe?${params.toString()}${hash}`;
+        window.location.replace(finalUrl); // 🔁 реальный редирект
+    </script>
 </head>
 <body>
-<script>
-    const queryParams = new URLSearchParams(window.location.search);
-    const hash = window.location.hash || '';
-
-    const startParamRaw = queryParams.get('tgWebAppStartParam');
-    if (!startParamRaw) {
-        document.body.innerHTML = '<p style="color:red; text-align:center; margin-top:2rem;">Ошибка: отсутствует параметр tgWebAppStartParam</p>';
-        throw new Error('Missing tgWebAppStartParam');
-    }
-
-    const segments = startParamRaw.split('-');
-    const eventId = segments.shift();
-    if (!eventId) {
-        document.body.innerHTML = '<p style="color:red; text-align:center; margin-top:2rem;">Ошибка: отсутствует event_id</p>';
-        throw new Error('Missing event_id');
-    }
-
-    const params = new URLSearchParams();
-
-    // Добавляем чистый eventId как tgWebAppStartParam
-    params.set('tgWebAppStartParam', eventId);
-
-    // Добавляем только валидные utm-пары
-    segments.forEach(seg => {
-        const [key, ...rest] = seg.split('=');
-        const val = rest.join('=');
-        if (key && val) {
-            params.set(key, val);
-        }
-    });
-
-    // Финальный URL
-    const finalUrl = `https://qtickets.ru/telegram-iframe?${params.toString()}${hash}`;
-
-    console.log("Final query params:", finalUrl);  // для отладки
-
-    const iframe = document.createElement('iframe');
-    iframe.id = 'frame';
-    iframe.src = finalUrl;
-    iframe.frameBorder = '0';
-    document.body.appendChild(iframe);
-</script>
+<p>Переходим…</p>
 </body>
 </html>
