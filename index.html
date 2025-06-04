@@ -48,7 +48,7 @@
     // Финальный URL
     const finalUrl = `https://qtickets.ru/telegram-iframe?${params.toString()}${hash}`;
 
-    console.log("Final query params:", params.toString());  // для отладки
+    console.log("Final query params:", finalUrl);  // для отладки
 
     const iframe = document.createElement('iframe');
     iframe.id = 'frame';
