@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <title>QTickets WebApp</title>
-    <!-- 1) Telegram WebApp SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js?57"></script>
+    <title>QTickets WebApp Proxy</title>
     <style>
         html, body, #frame {
             margin: 0; padding: 0;
@@ -17,54 +15,31 @@
 </head>
 <body>
 <script>
-    // 2) Получаем объект WebApp
-    const tg = window.Telegram?.WebApp;
-    // 3) Ждём готовности (даёт плавную интеграцию с UI Telegram)
-    tg?.ready();
+    const queryParams = new URLSearchParams(window.location.search);
+    const hash = window.location.hash || '';
 
-    // 4) Извлекаем строку start_param
-    //    – сначала пытаемся из initDataUnsafe (надёжнее, чем читать location.search напрямую)  [oai_citation:0‡Telegram](https://core.telegram.org/bots/webapps?utm_source=chatgpt.com)
-    //    – fallback: из query string (?startapp=...)
-    const startParam = tg?.initDataUnsafe?.start_param
-        || new URLSearchParams(location.search).get('startapp')
-        || '';
-
-    if (!startParam) {
-        document.body.innerHTML =
-            '<p style="color:red; text-align:center; margin-top:2rem;">Ошибка: не передан startapp</p>';
-        throw new Error('Missing startapp');
+    const startParamRaw = queryParams.get('tgWebAppStartParam');
+    if (!startParamRaw) {
+        document.body.innerHTML = '<p style="color:red; text-align:center; margin-top:2rem;">Ошибка: отсутствует параметр tgWebAppStartParam</p>';
+        throw new Error('Missing tgWebAppStartParam');
     }
 
-    // 5) Разбор сегментов вида "key=value"
-    //    Первый сегмент – просто event_id (число или строка)
-    const segments = startParam.split('-');
-    const eventId  = segments.shift();
+    const segments = startParamRaw.split('-');
+    const eventId = segments.shift();
     if (!eventId) {
-        document.body.innerHTML =
-            '<p style="color:red; text-align:center; margin-top:2rem;">Ошибка: нет event_id</p>';
+        document.body.innerHTML = '<p style="color:red; text-align:center; margin-top:2rem;">Ошибка: отсутствует event_id</p>';
         throw new Error('Missing event_id');
     }
 
-    // 6) Собираем остальные пары в объект
     const params = new URLSearchParams();
-    segments.forEach(seg => {
-        const [key, ...rest] = seg.split('=');
-        const val = rest.join('=');
-        if (key && val !== undefined) {
-            params.set(key, val);
-        }
-    });
+    params.set('tgWebAppStartParam', startParamRaw);
 
-    // 7) Строим URL для iframe
-    const qs  = params.toString(); // например: "utm_source=telegram&...&qcode=test"
-    const src = `https://qtickets.ru/event/${encodeURIComponent(eventId)}/${
-        qs ? '?' + qs : ''
-    }`;
+    // Формируем финальный URL для iframe
+    const finalUrl = `https://qtickets.ru/telegram-iframe?${params.toString()}${hash}`;
 
-    // 8) Вставляем iframe
     const iframe = document.createElement('iframe');
     iframe.id = 'frame';
-    iframe.src = src;
+    iframe.src = finalUrl;
     iframe.frameBorder = '0';
     document.body.appendChild(iframe);
 </script>
