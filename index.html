@@ -1,42 +1,52 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <title>Redirecting…</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Перенаправление…</title>
     <script>
-        const queryParams = new URLSearchParams(window.location.search);
-        const hash = window.location.hash || '';
+        (function () {
+            const queryParams = new URLSearchParams(window.location.search);
+            const hash = window.location.hash || '';
 
-        const startParamRaw = queryParams.get('tgWebAppStartParam');
-        if (!startParamRaw) {
-            document.body.innerText = 'Ошибка: нет tgWebAppStartParam';
-            throw new Error('Missing tgWebAppStartParam');
-        }
-
-        const segments = startParamRaw.split('-');
-        const eventId = segments.shift();
-        if (!eventId) {
-            document.body.innerText = 'Ошибка: нет eventId';
-            throw new Error('Missing eventId');
-        }
-
-        const params = new URLSearchParams();
-        params.set('tgWebAppStartParam', eventId);
-
-        segments.forEach(seg => {
-            const [key, ...rest] = seg.split('=');
-            const val = rest.join('=');
-            if (key && val) {
-                params.set(key, val);
+            const startParamRaw = queryParams.get('tgWebAppStartParam');
+            if (!startParamRaw) {
+                document.write('<p style="color:red;">Ошибка: отсутствует tgWebAppStartParam</p>');
+                return;
             }
-        });
 
-        const finalUrl = `https://qtickets.ru/telegram-iframe?${params.toString()}${hash}`;
-        window.location.replace(finalUrl); // 🔁 реальный редирект
+            const segments = startParamRaw.split('-');
+            const eventId = segments.shift();
+            if (!eventId) {
+                document.write('<p style="color:red;">Ошибка: отсутствует event_id</p>');
+                return;
+            }
+
+            const params = new URLSearchParams();
+            params.set('tgWebAppStartParam', eventId);
+
+            segments.forEach(seg => {
+                const [key, ...rest] = seg.split('=');
+                const val = rest.join('=');
+                if (key && val) {
+                    params.set(key, val);
+                }
+            });
+
+            // Добавим явный параметр ref, чтобы имитировать document.referrer
+            params.set('ref', 'https://telegram.org');
+
+            const finalUrl = `https://qtickets.ru/telegram-iframe?${params.toString()}${hash}`;
+
+            // Вставим meta refresh в head
+            const meta = document.createElement('meta');
+            meta.httpEquiv = 'refresh';
+            meta.content = `0;url=${finalUrl}`;
+            document.head.appendChild(meta);
+        })();
     </script>
 </head>
 <body>
-<p>Переходим…</p>
+<p>Переход на QTickets…</p>
 </body>
 </html>
