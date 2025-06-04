@@ -37,6 +37,8 @@
     // Формируем финальный URL для iframe
     const finalUrl = `https://qtickets.ru/telegram-iframe?${params.toString()}${hash}`;
 
+    alert(finalUrl);
+
     const iframe = document.createElement('iframe');
     iframe.id = 'frame';
     iframe.src = finalUrl;
