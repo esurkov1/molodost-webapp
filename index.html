@@ -1,52 +1,50 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Перенаправление…</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Открываю билетную кассу…</title>
+    <style>
+        body{margin:0;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif}
+    </style>
     <script>
         (function () {
-            const queryParams = new URLSearchParams(window.location.search);
-            const hash = window.location.hash || '';
+            /* 1. Берём startapp из URL, он приходит от Telegram: ?tgWebAppStartParam=168624-utm_source=...-... */
+            const q = new URLSearchParams(location.search);
+            const raw = q.get('tgWebAppStartParam');
+            if (!raw){ document.body.textContent = 'tgWebAppStartParam отсутствует'; return; }
 
-            const startParamRaw = queryParams.get('tgWebAppStartParam');
-            if (!startParamRaw) {
-                document.write('<p style="color:red;">Ошибка: отсутствует tgWebAppStartParam</p>');
-                return;
-            }
+            /* 2. Разбираем «eventId–utm_*–…» */
+            const parts   = raw.split('-');
+            const eventId = parts.shift();                  // 168624
+            const utmRaw  = parts.filter(Boolean);          // utm_source=..., utm_medium=... ...
 
-            const segments = startParamRaw.split('-');
-            const eventId = segments.shift();
-            if (!eventId) {
-                document.write('<p style="color:red;">Ошибка: отсутствует event_id</p>');
-                return;
-            }
+            /* 3. Собираем финальный query-набор */
+            const p = new URLSearchParams();
 
-            const params = new URLSearchParams();
-            params.set('tgWebAppStartParam', eventId);
+            /* — то, что Qtickets ждёт для авторизации пользователя — */
+            p.set('tgWebAppStartParam', eventId);           // только ID
+            p.set('event_id',            eventId);          // явно, чтобы сервер не гадал
 
-            segments.forEach(seg => {
-                const [key, ...rest] = seg.split('=');
-                const val = rest.join('=');
-                if (key && val) {
-                    params.set(key, val);
-                }
+            /* — UTM-метки отдельно, чтобы Qtickets увидел их как query-пары — */
+            utmRaw.forEach(seg=>{
+                const [k,...rest] = seg.split('=');
+                const v = rest.join('=');
+                if (k && v) p.set(k, v);
             });
 
-            // Добавим явный параметр ref, чтобы имитировать document.referrer
-            params.set('ref', 'https://telegram.org');
+            /* 4. Передаём URL-хэш (там сидят tgWebAppData, signature, …) без изменений */
+            const hash = location.hash || '';
 
-            const finalUrl = `https://qtickets.ru/telegram-iframe?${params.toString()}${hash}`;
+            /* 5. Конечный адрес */
+            const target = `https://qtickets.ru/telegram-iframe?${p.toString()}${hash}`;
 
-            // Вставим meta refresh в head
-            const meta = document.createElement('meta');
-            meta.httpEquiv = 'refresh';
-            meta.content = `0;url=${finalUrl}`;
-            document.head.appendChild(meta);
+            /* 6. Переход обычной навигацией (сохраняет Telegram.WebApp) */
+            location.href = target;
         })();
     </script>
 </head>
 <body>
-<p>Переход на QTickets…</p>
+<p>Загружаю QTickets…</p>
 </body>
 </html>
