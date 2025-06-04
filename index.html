@@ -3,54 +3,51 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Перенаправление…</title>
-
+    <title>Открываю QTickets…</title>
     <!-- Запрет кэширования -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma"        content="no-cache">
     <meta http-equiv="Expires"       content="0">
-
     <style>
-        body{margin:0;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif}
+        body { margin:0; display:flex; justify-content:center; align-items:center;
+            height:100vh; font-family:sans-serif }
     </style>
     <script>
         (function () {
-
             const search = new URLSearchParams(location.search);
             const hash   = location.hash || '';
 
-            /* 1. Оригинальная строка из Telegram */
-            const raw = search.get('tgWebAppStartParam');
-            if (!raw){ document.body.textContent = 'tgWebAppStartParam отсутствует'; return; }
+            // 1) Берём чистый eventId
+            const eventId = search.get('startapp');
+            if (!eventId) {
+                document.body.textContent = 'startapp должен быть указан';
+                return;
+            }
 
-            /* 2. Берём первый сегмент как eventId, остальные – UTM-пары */
-            const segments = raw.split('-');
-            const eventId  = segments.shift();
+            // 2) Готовим параметры для запроса к Qtickets
+            const params = new URLSearchParams();
+            params.set('tgWebAppStartParam', eventId);
+            params.set('event_id',            eventId);
 
-            const query = new URLSearchParams();
-            query.set('tgWebAppStartParam', raw);   // подпись остаётся валидной
-            query.set('event_id',            eventId);
+            // 3) Копируем utm_* из исходного URL (если они есть)
+            for (const [k, v] of search.entries()) {
+                if (k.startsWith('utm_') && v) {
+                    params.set(k, v);
+                }
+            }
 
-            /* 3. Дублируем UTM-пары в query */
-            segments.forEach(s=>{
-                const [k,...v] = s.split('=');
-                const val = v.join('=');
-                if (k && val) query.set(k, val);    // utm_source / medium / campaign …
-            });
+            // 4) Добавляем «cache buster» на случай, если нужно
+            params.set('_cb', Date.now());
 
-            /* 4. Кэш-бастер на всякий случай */
-            query.set('_cb', Date.now());
+            // 5) Формируем конечный URL
+            const dest = `https://qtickets.ru/telegram-iframe?${params}${hash}`;
 
-            console.log('final url →', `https://qtickets.ru/telegram-iframe?${query}${hash}`);
-            console.log('initData.start_param in this WebView →',
-            window.Telegram?.WebApp?.initDataUnsafe?.start_param);
-
-            /* 5. Переходим обычным редиректом (WebApp остаётся открытым) */
-            location.replace(`https://qtickets.ru/telegram-iframe?${query}${hash}`);
+            // 6) Переходим без новой истории (чтобы WebApp остался в том же контексте)
+            location.replace(dest);
         })();
     </script>
 </head>
 <body>
-<p>Открываю QTickets…</p>
+<p>Загружаем QTickets…</p>
 </body>
 </html>
